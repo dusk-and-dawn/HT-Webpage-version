@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Habit Tracker</title>
 </head>
@@ -13,5 +13,7 @@
         {% endfor %}
     </ul>
     <a href="{{ url_for('add')}}">Add a new habit</a>
+    <a href="{{ url_for('increment')}}">Increment a habit</a>
+    <a href="{{ url_for('analysis')}}">Open analysis module</a>
 </body>
 </html>
