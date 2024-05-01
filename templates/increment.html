@@ -5,11 +5,15 @@
     <title>Increment Habit</title>
 </head>
 <body>
-    <h1>Increment habit if you dare</h1>
-    <form method="post">
-        <input type="text" name="name" placeholder="Habit name" required>
-        <input type="text" name="date" placeholder="01-01-2000" required>
-        <input type="submit" value="increment Habit">
+    <h1>Increment habit</h1>
+    <form action="/submit-dropdown" method="post">
+        <select name="dropdown">
+            {% for option in options %}
+            <option value="{{ option | safe }}">{{ option }}</option>
+            {% endfor %}
+        </select>
+        
+        <button type="submit">Submit</button>
     </form>
 </body>
 </html>

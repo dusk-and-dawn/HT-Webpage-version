@@ -44,7 +44,7 @@ def add():
     if request.method == 'POST':
         name = request.form['name']
         date = datetime.now().date()
-        streak = 0 
+        streak = 1 
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute('SELECT name FROM habits')
@@ -59,6 +59,37 @@ def add():
         return redirect(url_for('index'))
     return render_template('add.html') 
 
+@app.route('/increment', methods=('POST', 'GET'))
+def increment():
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT name FROM habits')
+    habit_names = cur.fetchall()
+    existing_habit_names = [item[0] for item in habit_names]
+    options = list(set(existing_habit_names))
+    print(options)
+    return render_template('increment.html', options=options)
+
+@app.route('/submit-dropdown', methods=('GET', 'POST'))
+def handle_dropdown():
+    name = request.form['dropdown']
+    conn = get_db_connection()
+    cur = conn.cursor()
+    date = datetime.now().date()
+    cur.execute('SELECT name FROM habits')
+    habit_names = cur.fetchall()
+    existing_habit_names = [item[0] for item in habit_names]
+    streak = 1
+    for existing_habit in existing_habit_names:
+        if existing_habit == name:
+            streak+=1
+    conn.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?, ?)', (name, date, streak))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('index'))
+
+'''
 @app.route('/increment', methods=('GET', 'POST'))
 def increment():
     if request.method == 'POST':
@@ -78,6 +109,7 @@ def increment():
         conn.close()
         return redirect(url_for('index'))
     return render_template('increment.html') 
+'''
 
 @app.route('/analysis', methods=('GET', 'POST'))
 def analysis():
@@ -88,7 +120,8 @@ def analysis():
     conn.close()
     habits_ls = [element[0] for element in habits]
     most_habit = ''
-    for habit in habits_ls: 
+    single_habits_set = set(habits_ls)
+    for habit in single_habits_set: 
         if habits_ls.count(habit) > habits_ls.count(most_habit):
             most_habit = habit
         elif habits_ls.count(habit) == habits_ls.count(most_habit):
