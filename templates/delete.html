@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Delete Habit</title>
+</head>
+<body>
+    <h1>Delete habit</h1>
+
+    <form action="/delete_one" method="post">
+        <select name="dropdown">
+            {% for option in options %}
+            <option value="{{ option.id }}">{{ option.name }} - {{ option.date }}</option>
+            {% endfor %}
+        </select>
+        
+        <button type="submit">Delete single occurence</button>
+    </form>
+
+    <form action="/delete_all" method="post">
+        <select name="dropdown">
+            {% for option in options %}
+            <option value="{{ option.name }}">{{ option.name }}</option>
+            {% endfor %}
+        </select>
+        
+        <button type="submit">Delete entire habit</button>
+    </form>
+
+</body>
+</html>

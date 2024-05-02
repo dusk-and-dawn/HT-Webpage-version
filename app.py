@@ -23,7 +23,7 @@ def init_db():
 
 #@app.before_first_request --> couldn't get this to ever run, maybe figure out later 
 #def initialize_database():
-init_db() # this solution is easy and works like a charm but might have drawback, come back here once the rest is done
+init_db() # this solution is easy and works like a charm but might have drawbacks, come back here once the rest is done
 
 def get_db_connection():
     conn = sqlite3.connect('habit_tracker.db')
@@ -42,21 +42,24 @@ def index():
 @app.route('/add', methods=('GET', 'POST'))
 def add():
     if request.method == 'POST':
-        name = request.form['name']
-        date = datetime.now().date()
-        streak = 1 
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute('SELECT name FROM habits')
-        habit_names = cur.fetchall()
-        existing_habit_names = [item[0] for item in habit_names]
-        for existing_habit in existing_habit_names:
-            if existing_habit == name:
-                streak+=1
-        conn.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?, ?)', (name, date, streak))
-        conn.commit()
-        conn.close()
-        return redirect(url_for('index'))
+        if 'name' in request.form:
+            name = request.form['name']
+            date = datetime.now().date()
+            streak = 1 
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute('SELECT name FROM habits')
+            habit_names = cur.fetchall()
+            existing_habit_names = [item[0] for item in habit_names]
+            for existing_habit in existing_habit_names:
+                if existing_habit == name:
+                    streak+=1
+            conn.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?, ?)', (name, date, streak))
+            conn.commit()
+            conn.close()
+            return redirect(url_for('index'))
+        else: 
+            return "error no name provided", 400 
     return render_template('add.html') 
 
 @app.route('/increment', methods=('POST', 'GET'))
@@ -89,28 +92,6 @@ def handle_dropdown():
     conn.close()
     return redirect(url_for('index'))
 
-'''
-@app.route('/increment', methods=('GET', 'POST'))
-def increment():
-    if request.method == 'POST':
-        name = request.form['name']
-        date = request.form['date']
-        streak = 0 
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute('SELECT name FROM habits')
-        habit_names = cur.fetchall()
-        existing_habit_names = [item[0] for item in habit_names]
-        for existing_habit in existing_habit_names:
-            if existing_habit == name:
-                streak+=1
-        conn.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?, ?)', (name, date, streak))
-        conn.commit()
-        conn.close()
-        return redirect(url_for('index'))
-    return render_template('increment.html') 
-'''
-
 @app.route('/analysis', methods=('GET', 'POST'))
 def analysis():
     conn = get_db_connection()
@@ -128,6 +109,36 @@ def analysis():
             most_habit = habit, most_habit
 
     return render_template('analysis.html', variable_most_habit=most_habit)  
+
+@app.route('/delete', methods=('POST', 'GET'))
+def delete():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT id, name, date FROM habits ORDER BY id DESC')
+    deletables = cur.fetchall()
+    delete_choices = [{"id": item[0], "name": item[1], "date": item[2]} for item in deletables]
+    print(delete_choices)
+    return render_template('delete.html', options=delete_choices)
+
+@app.route('/delete_one', methods=('POST', 'GET'))
+def delete_one():
+    occurence_id = request.form['dropdown']
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM habits WHERE id=?', (occurence_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('index'))
+
+@app.route('/delete_all', methods=('GET', 'POST'))
+def delete_all():
+    name = request.form['dropdown']
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM habits WHERE name=?', (name,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug= True)
