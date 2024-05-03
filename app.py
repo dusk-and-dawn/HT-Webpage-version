@@ -1,6 +1,8 @@
 from flask import Flask, request, render_template, redirect, url_for
 import sqlite3 
 from datetime import datetime
+from analysis import analysis_streak
+from database import get_db_connection
 
 #making instance of Flask app 
 app = Flask(__name__)
@@ -25,10 +27,7 @@ def init_db():
 #def initialize_database():
 init_db() # this solution is easy and works like a charm but might have drawbacks, come back here once the rest is done
 
-def get_db_connection():
-    conn = sqlite3.connect('habit_tracker.db')
-    conn.row_factory = sqlite3.Row # getting back dictionaries from the row data
-    return conn
+
 
 @app.route('/')
 def index():
@@ -83,10 +82,20 @@ def handle_dropdown():
     cur.execute('SELECT name FROM habits')
     habit_names = cur.fetchall()
     existing_habit_names = [item[0] for item in habit_names]
-    streak = 1
-    for existing_habit in existing_habit_names:
-        if existing_habit == name:
-            streak+=1
+    transformed_date = date.strftime('%Y-%m-%d')
+    streak = analysis_streak(int(transformed_date[0:4]), name)
+    conn.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?, ?)', (name, date, streak))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('index'))
+
+@app.route('/record-alternative-date', methods=('POST', 'GET'))
+def record_alternative_date():
+    name = request.form['dropdown']
+    conn = get_db_connection()
+    cur = conn.cursor() 
+    date = request.form['date']
+    streak = analysis_streak(int(date[0:4]), name)
     conn.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?, ?)', (name, date, streak))
     conn.commit()
     conn.close()
@@ -107,6 +116,12 @@ def analysis():
             most_habit = habit
         elif habits_ls.count(habit) == habits_ls.count(most_habit):
             most_habit = habit, most_habit
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM habits')
+    ls_all = cur.fetchall()
+    
+    conn.close()
 
     return render_template('analysis.html', variable_most_habit=most_habit)  
 

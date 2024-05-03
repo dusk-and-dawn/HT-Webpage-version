@@ -13,7 +13,16 @@
             {% endfor %}
         </select>
         
-        <button type="submit">Submit</button>
+        <button type="submit">Record activity for today</button>
     </form>
+    <form action="/record-alternative-date" method="post">
+        <select name="dropdown">
+            {% for option in options %}
+            <option value="{{ option }}">{{ option }}</option>
+            {% endfor %}
+        </select>
+        <form method="post">
+            <input type="text" name="date" placeholder="date" required>
+        <button type="submit">Record activity for prior date</button>
 </body>
 </html>
