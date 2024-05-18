@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template, redirect, url_for, current_app
 import sqlite3 
 from datetime import datetime
 from analysis import analysis_streak
@@ -10,27 +10,31 @@ app = Flask(__name__)
 
 
 def init_db():
-    conn=sqlite3.connect('habit_tracker.db')
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS habits (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            date TEXT NOT NULL,
-            streak INTEGER NOT NULL
-        )
-    ''')
-    conn.commit()
-    conn.close()
+    with app.app_context():
+        database_path = app.config.get('DATABASE', 'habit_tracker.db')
+        conn=sqlite3.connect(database_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS habits (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                date TEXT NOT NULL,
+                streak INTEGER NOT NULL
+            )
+        ''')
+        conn.commit()
+        conn.close()
 
 #@app.before_first_request --> couldn't get this to ever run, maybe figure out later 
 #def initialize_database():
+
 init_db() # this solution is easy and works like a charm but might have drawbacks, come back here once the rest is done
 
 
 
 @app.route('/')
 def index():
+    app.config['DATABASE']  = 'habit_tracker.db'
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute('SELECT * FROM habits')
@@ -63,7 +67,6 @@ def add():
 
 @app.route('/increment', methods=('POST', 'GET'))
 def increment():
-    
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute('SELECT name FROM habits')
@@ -95,7 +98,7 @@ def record_alternative_date():
     conn = get_db_connection()
     cur = conn.cursor() 
     date = request.form['date']
-    streak = analysis_streak(int(date[0:4]), name)
+    streak = analysis_streak(int(date[0:4]), name) 
     conn.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?, ?)', (name, date, streak))
     conn.commit()
     conn.close()

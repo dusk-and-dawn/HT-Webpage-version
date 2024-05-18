@@ -1,5 +1,6 @@
 import datetime
 from database import get_db_connection
+from flask import current_app
 
 def all_dates_in_year(year):
     start_date = datetime.date(year, 1, 1)  # First day of the year
@@ -25,5 +26,4 @@ def analysis_streak(year, habit_name):
             pass
     return streak
 
-analysis_streak(2024, 'Mit Alina chillen')
 
