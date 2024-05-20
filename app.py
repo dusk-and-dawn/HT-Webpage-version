@@ -1,11 +1,12 @@
-from flask import Flask, request, render_template, redirect, url_for, current_app
+from flask import Flask, request, render_template, redirect, url_for, current_app, g
 import sqlite3 
 from datetime import datetime
-from analysis import analysis_streak
-from database import get_db_connection
+from analysis import current_streak
+from database import get_db_connection, close_db_connection
 
 #making instance of Flask app 
 app = Flask(__name__)
+app.config['DATABASE'] = 'habit_tracker.db'
 #print(app.template_folder) keep this in case I need to debug again
 
 
@@ -13,8 +14,8 @@ def init_db():
     with app.app_context():
         database_path = app.config.get('DATABASE', 'habit_tracker.db')
         conn=sqlite3.connect(database_path)
-        cursor = conn.cursor()
-        cursor.execute('''
+        cur = conn.cursor()
+        cur.execute('''
             CREATE TABLE IF NOT EXISTS habits (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
@@ -23,14 +24,24 @@ def init_db():
             )
         ''')
         conn.commit()
+        cur.close()
         conn.close()
+
+@app.before_request
+def before_request():
+    print("Before request: getting db connection")
+    g.db = get_db_connection()
+
+# This closes the connection after each request: 
+@app.teardown_appcontext
+def teardown(exception):
+    print('teardown request, closing db connection')
+    close_db_connection(exception)
 
 #@app.before_first_request --> couldn't get this to ever run, maybe figure out later 
 #def initialize_database():
 
 init_db() # this solution is easy and works like a charm but might have drawbacks, come back here once the rest is done
-
-
 
 @app.route('/')
 def index():
@@ -67,18 +78,21 @@ def add():
 
 @app.route('/increment', methods=('POST', 'GET'))
 def increment():
+    print('start of increment route, getting db connection')
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute('SELECT name FROM habits')
     habit_names = cur.fetchall()
     existing_habit_names = [item[0] for item in habit_names]
     options = list(set(existing_habit_names))
-    print(options)
+    cur.close()
+    print('end of route increment')
     return render_template('increment.html', options=options)
 
 @app.route('/submit-dropdown', methods=('GET', 'POST'))
 def handle_dropdown():
     name = request.form['dropdown']
+    print('starting db in submit-dropdown route')
     conn = get_db_connection()
     cur = conn.cursor()
     date = datetime.now().date()
@@ -86,31 +100,37 @@ def handle_dropdown():
     habit_names = cur.fetchall()
     existing_habit_names = [item[0] for item in habit_names]
     transformed_date = date.strftime('%Y-%m-%d')
-    streak = analysis_streak(int(transformed_date[0:4]), name)
+    streak = current_streak(name) # used this as args before  x(int(transformed_date[0:4]), name)
+    print('route handle dropdown - about to insert stuff into the db')
     conn.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?, ?)', (name, date, streak))
+    print('route handle dropdown - succesfully added stuff to the db')
     conn.commit()
-    conn.close()
+    cur.close()
+    print('end of route submit dropdown')
     return redirect(url_for('index'))
 
 @app.route('/record-alternative-date', methods=('POST', 'GET'))
 def record_alternative_date():
     name = request.form['dropdown']
+    print('start of alternative date route, getting db connection')
     conn = get_db_connection()
     cur = conn.cursor() 
     date = request.form['date']
-    streak = analysis_streak(int(date[0:4]), name) 
+    streak = current_streak(name) 
+    print('about to insert an alternative date into the db')
     conn.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?, ?)', (name, date, streak))
     conn.commit()
-    conn.close()
+    cur.close()
+    print('end of route record alternative date')
     return redirect(url_for('index'))
 
 @app.route('/analysis', methods=('GET', 'POST'))
 def analysis():
+   # app.config['DATABASE']  = 'habit_tracker.db'
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute('SELECT name FROM habits')
     habits = cur.fetchall()
-    conn.close()
     habits_ls = [element[0] for element in habits]
     most_habit = ''
     single_habits_set = set(habits_ls)
@@ -123,9 +143,8 @@ def analysis():
     cur = conn.cursor()
     cur.execute('SELECT * FROM habits')
     ls_all = cur.fetchall()
-    
+    cur.close()
     conn.close()
-
     return render_template('analysis.html', variable_most_habit=most_habit)  
 
 @app.route('/delete', methods=('POST', 'GET'))
