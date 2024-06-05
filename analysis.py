@@ -2,6 +2,18 @@ import datetime
 from database import get_db_connection
 from flask import current_app
 
+
+'''
+requirements:
+-
+return a list of all currently tracked habits, check
+-
+return a list of all habits with the same periodicity,
+-
+return the longest run streak of all defined habits,
+-
+and return the longest run streak for a given habit.
+'''
 def all_dates_in_year(year):
     start_date = datetime.date(year, 1, 1)  # First day of the year
     end_date = datetime.date(year, 12, 31)  
@@ -38,7 +50,7 @@ def current_streak(habit_name): #prior name analysis_streak
         if not data:
             return 0  # No data for the given habit_name
         
-        readable_dates = [item[0] for item in data]
+        readable_dates = sorted(list(set([item[0] for item in data])))
         streak = 0
         current_date = datetime.date.today()
         current_streak_date = current_date.strftime('%Y-%m-%d')
@@ -54,7 +66,8 @@ def current_streak(habit_name): #prior name analysis_streak
                 
         return streak
     finally:
-        conn.close()
+        pass
+        #conn.close()
 
 def maximum_streak(year, habit_name):
     year_data = all_dates_in_year(year)  # Generate a list of all dates in the given year
@@ -81,4 +94,5 @@ def maximum_streak(year, habit_name):
                 
         return max_streak  # Return the maximum streak found
     finally:
-        conn.close()  # Ensure the database connection is closed after the operation
+        pass
+        #conn.close()  # Ensure the database connection is closed after the operation

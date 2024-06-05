@@ -24,13 +24,14 @@ def init_db():
             )
         ''')
         conn.commit()
-        cur.close()
+        #cur.close()
         conn.close()
 
 @app.before_request
 def before_request():
     print("Before request: getting db connection")
     g.db = get_db_connection()
+
 
 # This closes the connection after each request: 
 @app.teardown_appcontext
@@ -50,7 +51,7 @@ def index():
     cur = conn.cursor()
     cur.execute('SELECT * FROM habits')
     habits = cur.fetchall()
-    conn.close()
+    #conn.close()
     return render_template('index.html', habits=habits)
 
 @app.route('/add', methods=('GET', 'POST'))
@@ -85,7 +86,7 @@ def increment():
     habit_names = cur.fetchall()
     existing_habit_names = [item[0] for item in habit_names]
     options = list(set(existing_habit_names))
-    cur.close()
+    conn.close()
     print('end of route increment')
     return render_template('increment.html', options=options)
 
@@ -105,7 +106,7 @@ def handle_dropdown():
     conn.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?, ?)', (name, date, streak))
     print('route handle dropdown - succesfully added stuff to the db')
     conn.commit()
-    cur.close()
+    conn.close()
     print('end of route submit dropdown')
     return redirect(url_for('index'))
 
@@ -118,9 +119,9 @@ def record_alternative_date():
     date = request.form['date']
     streak = current_streak(name) 
     print('about to insert an alternative date into the db')
-    conn.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?, ?)', (name, date, streak))
+    cur.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?, ?)', (name, date, streak))
     conn.commit()
-    cur.close()
+    conn.close()
     print('end of route record alternative date')
     return redirect(url_for('index'))
 
@@ -134,18 +135,22 @@ def analysis():
     habits_ls = [element[0] for element in habits]
     most_habit = ''
     single_habits_set = set(habits_ls)
+    show_habits = [i for i in single_habits_set]
     for habit in single_habits_set: 
         if habits_ls.count(habit) > habits_ls.count(most_habit):
             most_habit = habit
         elif habits_ls.count(habit) == habits_ls.count(most_habit):
             most_habit = habit, most_habit
+    longest_streak = []
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM habits')
-    ls_all = cur.fetchall()
-    cur.close()
+    cur.execute('SELECT * FROM habits WHERE streak = (SELECT MAX(streak) FROM habits)')
+    ls_all = cur.fetchone()
+    for i in ls_all:
+        longest_streak.append(i)
+    print(f'this is longest_streak: {longest_streak}')
     conn.close()
-    return render_template('analysis.html', variable_most_habit=most_habit)  
+    return render_template('analysis.html', variable_most_habit=most_habit, habits = show_habits, longest_streak_habit = longest_streak[1], longest_streak_streak = longest_streak[3])  
 
 @app.route('/delete', methods=('POST', 'GET'))
 def delete():
