@@ -15,7 +15,7 @@
     <a href="{{ url_for('delete')}}" >delete something</a>
     <ul>
         {% for habit in habits %}
-        <li>{{ habit.name }} - {{ habit.date }} - Streak: {{ habit.streak }}</li>
+        <li>{{ habit.name }} - {{ habit.periodicity }} - {{ habit.date }} - Streak: {{ habit.streak }}</li>
         {% endfor %}
     </ul>
 

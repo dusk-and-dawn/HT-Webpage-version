@@ -8,9 +8,9 @@ requirements:
 -
 return a list of all currently tracked habits, check
 -
-return a list of all habits with the same periodicity,
+return a list of all habits with the same periodicity, check
 -
-return the longest run streak of all defined habits,
+return the longest run streak of all defined habits, check 
 -
 and return the longest run streak for a given habit.
 '''

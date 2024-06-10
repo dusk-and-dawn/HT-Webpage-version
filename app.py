@@ -7,8 +7,6 @@ from database import get_db_connection, close_db_connection
 #making instance of Flask app 
 app = Flask(__name__)
 app.config['DATABASE'] = 'habit_tracker.db'
-#print(app.template_folder) keep this in case I need to debug again
-
 
 def init_db():
     with app.app_context():
@@ -20,11 +18,18 @@ def init_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 date TEXT NOT NULL,
-                streak INTEGER NOT NULL
+                streak INTEGER NOT NULL,
+                periodicity TEXT NOT NULL
             )
         ''')
+
+        # Check if the column periodicity exists
+        cur.execute("PRAGMA table_info(habits)")
+        columns = [column[1] for column in cur.fetchall()]
+        if 'periodicity' not in columns:
+            cur.execute('ALTER TABLE habits ADD COLUMN periodicity TEXT NOT NULL DEFAULT "daily"')
+
         conn.commit()
-        #cur.close()
         conn.close()
 
 @app.before_request
@@ -59,6 +64,7 @@ def add():
     if request.method == 'POST':
         if 'name' in request.form:
             name = request.form['name']
+            periodicity = request.form['periodicity']
             date = datetime.now().date()
             streak = 1 
             conn = get_db_connection()
@@ -68,8 +74,8 @@ def add():
             existing_habit_names = [item[0] for item in habit_names]
             for existing_habit in existing_habit_names:
                 if existing_habit == name:
-                    streak+=1
-            conn.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?, ?)', (name, date, streak))
+                    return 'this habit already exists, please insert a new habit, or increment the existing one', 500
+            conn.execute('INSERT INTO habits (name, date, streak, periodicity) VALUES (?, ?, ?, ?)', (name, date, streak, periodicity))
             conn.commit()
             conn.close()
             return redirect(url_for('index'))
@@ -149,8 +155,14 @@ def analysis():
     for i in ls_all:
         longest_streak.append(i)
     print(f'this is longest_streak: {longest_streak}')
+    cur = conn.cursor()
+    cur.execute('SELECT name FROM habits WHERE periodicity = ?', ('daily',))
+    dailies = set(cur.fetchall())
+    cur = conn.cursor()
+    cur.execute('SELECT name FROM habits WHERE periodicity = ?', ('weekly',))
+    weeklies = set(cur.fetchall())
     conn.close()
-    return render_template('analysis.html', variable_most_habit=most_habit, habits = show_habits, longest_streak_habit = longest_streak[1], longest_streak_streak = longest_streak[3])  
+    return render_template('analysis.html', variable_most_habit=most_habit, habits = show_habits, longest_streak_habit = longest_streak[1], longest_streak_streak = longest_streak[3], daily_habits = dailies, weekly_habits = weeklies)  
 
 @app.route('/delete', methods=('POST', 'GET'))
 def delete():
