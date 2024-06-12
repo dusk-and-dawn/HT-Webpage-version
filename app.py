@@ -18,7 +18,7 @@ def init_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 date TEXT NOT NULL,
-                streak INTEGER NOT NULL,
+                streak INTEGER,
                 periodicity TEXT NOT NULL
             )
         ''')
@@ -31,7 +31,7 @@ def init_db():
 
         conn.commit()
         conn.close()
-
+        
 @app.before_request
 def before_request():
     g.db = get_db_connection()
@@ -64,7 +64,7 @@ def add():
             name = request.form['name']
             periodicity = request.form['periodicity']
             date = datetime.now().date()
-            streak = 1 
+            #streak = 1 
             conn = get_db_connection()
             cur = conn.cursor()
             cur.execute('SELECT name FROM habits')
@@ -73,7 +73,7 @@ def add():
             for existing_habit in existing_habit_names:
                 if existing_habit == name:
                     return 'this habit already exists, please insert a new habit, or increment the existing one', 500
-            conn.execute('INSERT INTO habits (name, date, streak, periodicity) VALUES (?, ?, ?, ?)', (name, date, streak, periodicity))
+            conn.execute('INSERT INTO habits (name, date, periodicity) VALUES (?, ?, ?)', (name, date, periodicity))
             conn.commit()
             conn.close()
             return redirect(url_for('index'))
@@ -102,8 +102,8 @@ def handle_dropdown():
     habit_names = cur.fetchall()
     existing_habit_names = [item[0] for item in habit_names]
     transformed_date = date.strftime('%Y-%m-%d')
-    streak = current_streak(name) # used this as args before  x(int(transformed_date[0:4]), name)
-    conn.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?, ?)', (name, date, streak))
+    #streak = current_streak(name) # used this as args before  x(int(transformed_date[0:4]), name)
+    conn.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?)', (name, date))
     conn.commit()
     conn.close()
     return redirect(url_for('index'))
@@ -114,8 +114,8 @@ def record_alternative_date():
     conn = get_db_connection()
     cur = conn.cursor() 
     date = request.form['date']
-    streak = current_streak(name) 
-    cur.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?, ?)', (name, date, streak))
+    #streak = current_streak(name) 
+    cur.execute('INSERT INTO habits (name, date) VALUES (?, ?)', (name, date))
     conn.commit()
     conn.close()
     return redirect(url_for('index'))
@@ -139,10 +139,20 @@ def analysis():
     longest_streak = []
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM habits WHERE streak = (SELECT MAX(streak) FROM habits)')
-    ls_all = cur.fetchone()
-    for i in ls_all:
-        longest_streak.append(i)
+    #cur.execute('SELECT * FROM habits WHERE streak = (SELECT MAX(streak) FROM habits)')
+    cur.execute('SELECT name FROM habits WHERE periodicity = ?', ('daily',))
+    ls_daily = cur.fetchall()
+    ls_daily_readable_set = set([i[0] for i in ls_daily])
+    for i in ls_daily_readable_set:
+        longest_streak.append([i, current_streak(i)])
+
+    all_dates = [i[1] for i in longest_streak]
+    streak_count = max(all_dates)
+    longest_habit_s = []
+    for habit, date in longest_streak:
+        if date == streak_count:
+            longest_habit_s.append(habit) 
+
     cur = conn.cursor()
     cur.execute('SELECT name FROM habits WHERE periodicity = ?', ('daily',))
     dailies = set(cur.fetchall())
@@ -150,7 +160,7 @@ def analysis():
     cur.execute('SELECT name FROM habits WHERE periodicity = ?', ('weekly',))
     weeklies = set(cur.fetchall())
     conn.close()
-    return render_template('analysis.html', variable_most_habit=most_habit, habits = show_habits, longest_streak_habit = longest_streak[1], longest_streak_streak = longest_streak[3], daily_habits = dailies, weekly_habits = weeklies)  
+    return render_template('analysis.html', variable_most_habit=most_habit, habits = show_habits, longest_streak_habit = longest_habit_s, longest_streak_streak = streak_count, daily_habits = dailies, weekly_habits = weeklies)  
 
 @app.route('/delete', methods=('POST', 'GET'))
 def delete():
