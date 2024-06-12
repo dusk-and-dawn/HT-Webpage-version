@@ -34,14 +34,12 @@ def init_db():
 
 @app.before_request
 def before_request():
-    print("Before request: getting db connection")
     g.db = get_db_connection()
 
 
 # This closes the connection after each request: 
 @app.teardown_appcontext
 def teardown(exception):
-    print('teardown request, closing db connection')
     close_db_connection(exception)
 
 #@app.before_first_request --> couldn't get this to ever run, maybe figure out later 
@@ -85,7 +83,6 @@ def add():
 
 @app.route('/increment', methods=('POST', 'GET'))
 def increment():
-    print('start of increment route, getting db connection')
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute('SELECT name FROM habits')
@@ -93,13 +90,11 @@ def increment():
     existing_habit_names = [item[0] for item in habit_names]
     options = list(set(existing_habit_names))
     conn.close()
-    print('end of route increment')
     return render_template('increment.html', options=options)
 
 @app.route('/submit-dropdown', methods=('GET', 'POST'))
 def handle_dropdown():
     name = request.form['dropdown']
-    print('starting db in submit-dropdown route')
     conn = get_db_connection()
     cur = conn.cursor()
     date = datetime.now().date()
@@ -108,27 +103,21 @@ def handle_dropdown():
     existing_habit_names = [item[0] for item in habit_names]
     transformed_date = date.strftime('%Y-%m-%d')
     streak = current_streak(name) # used this as args before  x(int(transformed_date[0:4]), name)
-    print('route handle dropdown - about to insert stuff into the db')
     conn.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?, ?)', (name, date, streak))
-    print('route handle dropdown - succesfully added stuff to the db')
     conn.commit()
     conn.close()
-    print('end of route submit dropdown')
     return redirect(url_for('index'))
 
 @app.route('/record-alternative-date', methods=('POST', 'GET'))
 def record_alternative_date():
     name = request.form['dropdown']
-    print('start of alternative date route, getting db connection')
     conn = get_db_connection()
     cur = conn.cursor() 
     date = request.form['date']
     streak = current_streak(name) 
-    print('about to insert an alternative date into the db')
     cur.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?, ?)', (name, date, streak))
     conn.commit()
     conn.close()
-    print('end of route record alternative date')
     return redirect(url_for('index'))
 
 @app.route('/analysis', methods=('GET', 'POST'))
@@ -154,7 +143,6 @@ def analysis():
     ls_all = cur.fetchone()
     for i in ls_all:
         longest_streak.append(i)
-    print(f'this is longest_streak: {longest_streak}')
     cur = conn.cursor()
     cur.execute('SELECT name FROM habits WHERE periodicity = ?', ('daily',))
     dailies = set(cur.fetchall())
@@ -171,7 +159,6 @@ def delete():
     cur.execute('SELECT id, name, date FROM habits ORDER BY id DESC')
     deletables = cur.fetchall()
     delete_choices = [{"id": item[0], "name": item[1], "date": item[2]} for item in deletables]
-    print(delete_choices)
     return render_template('delete.html', options=delete_choices)
 
 @app.route('/delete_one', methods=('POST', 'GET'))
