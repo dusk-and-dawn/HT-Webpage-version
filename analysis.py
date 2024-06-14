@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timedelta
 from database import get_db_connection
 from flask import current_app
 
@@ -52,15 +52,18 @@ def current_streak(habit_name): #prior name analysis_streak
         
         readable_dates = sorted(list(set([item[0] for item in data])))
         streak = 0
-        current_date = datetime.date.today()
-        current_streak_date = current_date.strftime('%Y-%m-%d')
-        
+        #current_date = datetime.date.today()
+        #current_date = readable_dates[-1]
+        #current_streak_date = current_date.strftime('%Y-%m-%d')
+        current_streak_date = readable_dates[-1]
         # Check the current streak
         for i in range(len(readable_dates) - 1, -1, -1):
             if readable_dates[i] == current_streak_date:
                 streak += 1
-                current_date -= datetime.timedelta(days=1)
-                current_streak_date = current_date.strftime('%Y-%m-%d')
+                transformer = datetime.strptime(current_streak_date, '%Y-%m-%d')
+                #current_date -= datetime.timedelta(days=1)
+                transformer -= timedelta(days=1)
+                current_streak_date = transformer.strftime('%Y-%m-%d')
             else:
                 break
                 

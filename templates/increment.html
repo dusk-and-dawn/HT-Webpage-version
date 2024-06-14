@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <title>Increment Habit</title>
 </head>
+
 <body>
     <h1>Increment habit</h1>
+    <textarea readonly name="Increment explainer" rows="5" cols="60">
+Here you can record instances of doing your habits, either for the current date or any previous and even future date.
+Please do stick to the YYYY-MM-DD format.  
+        </textarea>
     <form action="/submit-dropdown" method="post">
         <select name="dropdown">
             {% for option in options %}

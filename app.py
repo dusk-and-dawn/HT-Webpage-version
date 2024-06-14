@@ -160,7 +160,7 @@ def analysis():
     cur.execute('SELECT name FROM habits WHERE periodicity = ?', ('weekly',))
     weeklies = set(cur.fetchall())
     conn.close()
-    return render_template('analysis.html', variable_most_habit=most_habit, habits = show_habits, longest_streak_habit = longest_habit_s, longest_streak_streak = streak_count, daily_habits = dailies, weekly_habits = weeklies)  
+    return render_template('analysis.html', variable_most_habit=most_habit, habits = show_habits, longest_streak_habit = longest_habit_s[0], longest_streak_streak = streak_count, daily_habits = dailies, weekly_habits = weeklies)  
 
 @app.route('/delete', methods=('POST', 'GET'))
 def delete():

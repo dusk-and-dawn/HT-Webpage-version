@@ -13,9 +13,13 @@
     <a href="{{ url_for('increment')}}">Increment a habit</a>
     <a href="{{ url_for('analysis')}}" >Open analysis module</a>
     <a href="{{ url_for('delete')}}" >delete something</a>
+    <br>
+    <textarea readonly name="greeting" rows="5" cols="60">
+    Welcome to David's habit tracker. This has been made with a lot of love for programming, but not a lot of experience in web development. Any errors are my own and anything well done is thanks to the amazing people I got to practice with and learn from. 
+    </textarea>
     <ul>
         {% for habit in habits %}
-        <li>{{ habit.name }} - {{ habit.periodicity }} - {{ habit.date }} - Streak: {{ habit.streak }}</li>
+        <li>{{ habit.name }} - {{ habit.periodicity }} - {{ habit.date }}</li>
         {% endfor %}
     </ul>
 
