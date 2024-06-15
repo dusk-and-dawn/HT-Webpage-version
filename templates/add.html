@@ -10,6 +10,8 @@
 Here you can add a new habit. Please note that you will run into an error if you try to add a previously added habit. 
 You can navigate back to the main menu to increment an existing habit via the "increment a habit" function. 
     </textarea>
+    <br>
+    <br>
     <form method="post">
         <input type="text" name="name" placeholder="Habit name" required>
         <select name="periodicity" required>
@@ -18,5 +20,15 @@ You can navigate back to the main menu to increment an existing habit via the "i
         </select>
         <input type="submit" value="Add Habit">
     </form>
+    <br>
+    <textarea readonly name="greeting" rows="2" cols="60">
+For your convenience the existing habits are listed below: 
+        </textarea>
+    <ul>
+        {% for habit in habits %}
+        <li>{{ habit.name }}</li>
+        {% endfor %}
+    </ul>
+
 </body>
 </html>

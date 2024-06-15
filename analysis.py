@@ -23,79 +23,28 @@ def all_dates_in_year(year):
     return ls_all_dates
 
 def current_streak(habit_name): #prior name analysis_streak 
-    '''
-    year_data = all_dates_in_year(year)
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('SELECT name, date FROM habits WHERE name = ? ORDER BY date', (habit_name,))
+
+    cur.execute('SELECT date FROM habits WHERE name = ? ORDER BY date', (habit_name,))
     data = cur.fetchall()
-    readable_dates = set([item[1] for item in data])
-
-    readable_name = data[0][0]
-    streak = 1 
-    for date in readable_dates: 
-        if year_data[year_data.index(date)-1] in readable_dates:
-            streak +=1
+    
+    if not data:
+        return 0  # No data for the given habit_name
+    
+    readable_dates = sorted(list(set([item[0] for item in data])))
+    streak = 0
+    current_streak_date = readable_dates[-1]
+    actual_streak_d = []
+    # Check the current streak
+    for i in range(len(readable_dates) - 1, -1, -1):
+        if readable_dates[i] == current_streak_date:
+            streak += 1
+            actual_streak_d.append(readable_dates[i])
+            transformer = datetime.strptime(current_streak_date, '%Y-%m-%d')
+            transformer -= timedelta(days=1)
+            current_streak_date = transformer.strftime('%Y-%m-%d')
         else:
-            pass
-    return streak
-    '''
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    try:
-        cur.execute('SELECT date FROM habits WHERE name = ? ORDER BY date', (habit_name,))
-        data = cur.fetchall()
-        
-        if not data:
-            return 0  # No data for the given habit_name
-        
-        readable_dates = sorted(list(set([item[0] for item in data])))
-        streak = 0
-        #current_date = datetime.date.today()
-        #current_date = readable_dates[-1]
-        #current_streak_date = current_date.strftime('%Y-%m-%d')
-        current_streak_date = readable_dates[-1]
-        # Check the current streak
-        for i in range(len(readable_dates) - 1, -1, -1):
-            if readable_dates[i] == current_streak_date:
-                streak += 1
-                transformer = datetime.strptime(current_streak_date, '%Y-%m-%d')
-                #current_date -= datetime.timedelta(days=1)
-                transformer -= timedelta(days=1)
-                current_streak_date = transformer.strftime('%Y-%m-%d')
-            else:
-                break
-                
-        return streak
-    finally:
-        pass
-        #conn.close()
-
-def maximum_streak(year, habit_name):
-    year_data = all_dates_in_year(year)  # Generate a list of all dates in the given year
-    conn = get_db_connection()  # Get a database connection
-    cur = conn.cursor()  # Create a cursor object to interact with the database
-    
-    try:
-        cur.execute('SELECT date FROM habits WHERE name = ?', (habit_name,))  # Fetch all dates for the given habit
-        data = cur.fetchall()  # Retrieve all results from the query
-        
-        if not data:
-            return 0  # If there are no records, return 0 as there are no streaks
-        
-        readable_dates = set([item[0] for item in data])  # Convert the dates to a set for efficient lookup
-        streak = 0  # Initialize the current streak counter
-        max_streak = 0  # Initialize the maximum streak counter
-        
-        for date in year_data:  # Iterate through all dates in the year
-            if date in readable_dates:  # Check if the current date is in the set of habit dates
-                streak += 1  # If it is, increment the current streak counter
-                max_streak = max(max_streak, streak)  # Update the maximum streak if the current streak is higher
-            else:
-                streak = 0  # If the current date is not in the set, reset the current streak counter to 0
-                
-        return max_streak  # Return the maximum streak found
-    finally:
-        pass
-        #conn.close()  # Ensure the database connection is closed after the operation
+            break
+            
+    return streak, actual_streak_d

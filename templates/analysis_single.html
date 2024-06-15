@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Analyzing Single Habit</title>
+</head>
+<body>
+    <h1>Analyzing single habit</h1>
+    <textarea readonly name="analyzing single habit intro" rows="7" cols="60">
+Welcome to the single habit analysis module. My functionality is still being implemented
+    </textarea>
+<div> This is the habit you are analyzing: {{ habit }}</div> 
+<br>
+<div> Your longest streak for this habit was {{ streak }} units long and was from: {{ start_streak }} - {{ end_streak }} </div>
+<br>
+<div> You recorded this habit on the following dates:</div>
+<ul>
+    {% for dates in habits %}
+    <li>{{ dates }}</li>
+    {% endfor %}
+</ul>
+</body>
+</html>

@@ -6,7 +6,11 @@
 </head>
 <body>
     <h1>Delete habit</h1>
-
+    <textarea readonly name="greeting" rows="7" cols="60">
+Here you have reached the deletion module. Be careful with this one as a habit is gone once it is deleted.
+Below two options are offered, the option to delete a single habit occurence and the option to delete all occurences of a habit. 
+In other words you can either delete one habit at a certain date or one habit entirely. 
+    </textarea>
     <form action="/delete_one" method="post">
         <select name="dropdown">
             {% for option in options %}

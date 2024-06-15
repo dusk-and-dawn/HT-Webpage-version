@@ -59,6 +59,11 @@ def index():
 
 @app.route('/add', methods=('GET', 'POST'))
 def add():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT name FROM habits')
+    existing_stuff = cur.fetchall()
+    #existing_stuff_names = [item[0] for item in habit_names]
     if request.method == 'POST':
         if 'name' in request.form:
             name = request.form['name']
@@ -79,7 +84,7 @@ def add():
             return redirect(url_for('index'))
         else: 
             return "error no name provided", 400 
-    return render_template('add.html') 
+    return render_template('add.html', habits = set(existing_stuff)) 
 
 @app.route('/increment', methods=('POST', 'GET'))
 def increment():
@@ -144,7 +149,7 @@ def analysis():
     ls_daily = cur.fetchall()
     ls_daily_readable_set = set([i[0] for i in ls_daily])
     for i in ls_daily_readable_set:
-        longest_streak.append([i, current_streak(i)])
+        longest_streak.append([i, current_streak(i)[0]])
 
     all_dates = [i[1] for i in longest_streak]
     streak_count = max(all_dates)
@@ -159,8 +164,22 @@ def analysis():
     cur = conn.cursor()
     cur.execute('SELECT name FROM habits WHERE periodicity = ?', ('weekly',))
     weeklies = set(cur.fetchall())
+    
+    cur.execute('SELECT name, periodicity FROM habits')
+    all_habits = [i[0] for i in set(cur.fetchall())]
     conn.close()
-    return render_template('analysis.html', variable_most_habit=most_habit, habits = show_habits, longest_streak_habit = longest_habit_s[0], longest_streak_streak = streak_count, daily_habits = dailies, weekly_habits = weeklies)  
+    return render_template('analysis.html', variable_most_habit=most_habit, habits = show_habits, longest_streak_habit = longest_habit_s[0], longest_streak_streak = streak_count, daily_habits = dailies, weekly_habits = weeklies, all_habits = all_habits)  
+
+@app.route('/submit-dropdown-analysis', methods = ('POST', 'GET'))
+def analyze_selected():
+    habit = request.form['dropdown']
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT date FROM habits WHERE name = ?', (habit,))
+    all_dates = cur.fetchall()
+    r_all_dates = sorted([i[0] for i in all_dates])
+    streak = current_streak(habit)
+    return render_template('analysis_single.html', habit = habit, start_streak = streak[1][-1], end_streak = streak[1][0], habits = r_all_dates, streak = streak[0])
 
 @app.route('/delete', methods=('POST', 'GET'))
 def delete():

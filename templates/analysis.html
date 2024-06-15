@@ -29,5 +29,16 @@
     </ul>
     <br>         
     <div>Your longest streak was of the habit: {{ longest_streak_habit }} which you recorded for {{ longest_streak_streak }} units.</div>
+    <br>
+    <div>These are the habits you can analyze:</div>
+
+    <form action="/submit-dropdown-analysis" method="post">
+        <select name="dropdown">
+            {% for option in all_habits %}
+            <option value="{{ option | safe }}">{{ option }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">analyze this habit</button>
+    </form>
 </body>
 </html>
