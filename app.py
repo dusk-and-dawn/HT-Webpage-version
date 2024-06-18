@@ -103,12 +103,9 @@ def handle_dropdown():
     conn = get_db_connection()
     cur = conn.cursor()
     date = datetime.now().date()
-    cur.execute('SELECT name FROM habits')
-    habit_names = cur.fetchall()
-    existing_habit_names = [item[0] for item in habit_names]
-    transformed_date = date.strftime('%Y-%m-%d')
-    #streak = current_streak(name) # used this as args before  x(int(transformed_date[0:4]), name)
-    conn.execute('INSERT INTO habits (name, date, streak) VALUES (?, ?)', (name, date))
+    cur.execute('SELECT periodicity FROM habits WHERE name = ?', (name,))
+    habit_per = cur.fetchone()[0]
+    conn.execute('INSERT INTO habits (name, date, periodicity) VALUES (?, ?, ?)', (name, date, habit_per))
     conn.commit()
     conn.close()
     return redirect(url_for('index'))
@@ -119,8 +116,9 @@ def record_alternative_date():
     conn = get_db_connection()
     cur = conn.cursor() 
     date = request.form['date']
-    #streak = current_streak(name) 
-    cur.execute('INSERT INTO habits (name, date) VALUES (?, ?)', (name, date))
+    cur.execute('SELECT periodicity FROM habits WHERE name = ?', (name,))
+    periodicity = cur.fetchone()[0]
+    conn.execute('INSERT INTO habits (name, date, periodicity) VALUES (?, ?, ?)', (name, date, periodicity))
     conn.commit()
     conn.close()
     return redirect(url_for('index'))
