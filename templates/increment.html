@@ -27,7 +27,8 @@ Please do stick to the YYYY-MM-DD format.
             {% endfor %}
         </select>
         <form method="post">
-            <input type="text" name="date" placeholder="date" required>
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date" placeholder="YYYY-MM-DD" required>
         <button type="submit">Record activity for prior date</button>
 </body>
 </html>

@@ -186,7 +186,9 @@ def delete():
     cur.execute('SELECT id, name, date FROM habits ORDER BY id DESC')
     deletables = cur.fetchall()
     delete_choices = [{"id": item[0], "name": item[1], "date": item[2]} for item in deletables]
-    return render_template('delete.html', options=delete_choices)
+    cur.execute('SELECT name FROM habits')
+    options1 = cur.fetchall()
+    return render_template('delete.html', options=delete_choices, options1=set(options1))
 
 @app.route('/delete_one', methods=('POST', 'GET'))
 def delete_one():

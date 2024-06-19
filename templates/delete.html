@@ -23,7 +23,7 @@ In other words you can either delete one habit at a certain date or one habit en
 
     <form action="/delete_all" method="post">
         <select name="dropdown">
-            {% for option in options %}
+            {% for option in options1 %}
             <option value="{{ option.name }}">{{ option.name }}</option>
             {% endfor %}
         </select>
