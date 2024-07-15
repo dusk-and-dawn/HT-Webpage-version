@@ -4,7 +4,6 @@ from datetime import datetime
 from analysis import current_streak
 from database import get_db_connection, close_db_connection
 
-#making instance of Flask app 
 app = Flask(__name__)
 app.config['DATABASE'] = 'habit_tracker.db'
 
@@ -42,10 +41,8 @@ def before_request():
 def teardown(exception):
     close_db_connection(exception)
 
-#@app.before_first_request --> couldn't get this to ever run, maybe figure out later 
-#def initialize_database():
-
-init_db() # this solution is easy and works like a charm but might have drawbacks, come back here once the rest is done
+# *****************is the initialization of the DB*****************
+init_db() 
 
 @app.route('/')
 def index():
@@ -54,7 +51,7 @@ def index():
     cur = conn.cursor()
     cur.execute('SELECT * FROM habits')
     habits = cur.fetchall()
-    #conn.close()
+    conn.close()
     return render_template('index.html', habits=habits)
 
 @app.route('/add', methods=('GET', 'POST'))
@@ -63,13 +60,11 @@ def add():
     cur = conn.cursor()
     cur.execute('SELECT name FROM habits')
     existing_stuff = cur.fetchall()
-    #existing_stuff_names = [item[0] for item in habit_names]
     if request.method == 'POST':
         if 'name' in request.form:
             name = request.form['name']
             periodicity = request.form['periodicity']
             date = datetime.now().date()
-            #streak = 1 
             conn = get_db_connection()
             cur = conn.cursor()
             cur.execute('SELECT name FROM habits')
@@ -125,7 +120,6 @@ def record_alternative_date():
 
 @app.route('/analysis', methods=('GET', 'POST'))
 def analysis():
-   # app.config['DATABASE']  = 'habit_tracker.db'
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute('SELECT name FROM habits')
@@ -142,7 +136,6 @@ def analysis():
     longest_streak = []
     conn = get_db_connection()
     cur = conn.cursor()
-    #cur.execute('SELECT * FROM habits WHERE streak = (SELECT MAX(streak) FROM habits)')
     cur.execute('SELECT name FROM habits WHERE periodicity = ?', ('daily',))
     ls_daily = cur.fetchall()
     ls_daily_readable_set = set([i[0] for i in ls_daily])

@@ -1,1 +1,3 @@
 __pycache__/
+venv
+habit_tracker.db
