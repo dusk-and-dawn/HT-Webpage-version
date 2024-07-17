@@ -25,8 +25,6 @@ However, to run HabIT, all dependencies must also be installed, which includes:
 
 -datetime 
 
--sqlite3
-
 -pytest 
 
 All of these can be installed using the pip installer, which itself comes with Python, if python was installed from the python.org webpage. 
@@ -36,9 +34,9 @@ pip install flask
 
 pip install datetime 
 
-pip install sqlite
-
 pip install pytest 
+
+SQLite3 is also required, however it is included in any modern Python package and therefor does not need to be actively installed. 
 
 ## General structure
 
