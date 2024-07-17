@@ -120,47 +120,50 @@ def record_alternative_date():
 
 @app.route('/analysis', methods=('GET', 'POST'))
 def analysis():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('SELECT name FROM habits')
-    habits = cur.fetchall()
-    habits_ls = [element[0] for element in habits]
-    most_habit = ''
-    single_habits_set = set(habits_ls)
-    show_habits = [i for i in single_habits_set]
-    for habit in single_habits_set: 
-        if habits_ls.count(habit) > habits_ls.count(most_habit):
-            most_habit = habit
-        elif habits_ls.count(habit) == habits_ls.count(most_habit):
-            most_habit = habit, most_habit
-    longest_streak = []
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('SELECT name FROM habits WHERE periodicity = ?', ('daily',))
-    ls_daily = cur.fetchall()
-    ls_daily_readable_set = set([i[0] for i in ls_daily])
-    for i in ls_daily_readable_set:
-        longest_streak.append([i, current_streak(i)[0]])
+    try: 
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT name FROM habits')
+        habits = cur.fetchall()
+        habits_ls = [element[0] for element in habits]
+        most_habit = ''
+        single_habits_set = set(habits_ls)
+        show_habits = [i for i in single_habits_set]
+        for habit in single_habits_set: 
+            if habits_ls.count(habit) > habits_ls.count(most_habit):
+                most_habit = habit
+            elif habits_ls.count(habit) == habits_ls.count(most_habit):
+                most_habit = habit, most_habit
+        longest_streak = []
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT name FROM habits WHERE periodicity = ?', ('daily',))
+        ls_daily = cur.fetchall()
+        ls_daily_readable_set = set([i[0] for i in ls_daily])
+        for i in ls_daily_readable_set:
+            longest_streak.append([i, current_streak(i)[0]])
 
-    all_dates = [i[1] for i in longest_streak]
-    streak_count = max(all_dates)
-    longest_habit_s = []
-    for habit, date in longest_streak:
-        if date == streak_count:
-            longest_habit_s.append(habit) 
+        all_dates = [i[1] for i in longest_streak]
+        streak_count = max(all_dates)
+        longest_habit_s = []
+        for habit, date in longest_streak:
+            if date == streak_count:
+                longest_habit_s.append(habit) 
 
-    cur = conn.cursor()
-    cur.execute('SELECT name FROM habits WHERE periodicity = ?', ('daily',))
-    dailies = set(cur.fetchall())
-    cur = conn.cursor()
-    cur.execute('SELECT name FROM habits WHERE periodicity = ?', ('weekly',))
-    weeklies = set(cur.fetchall())
+        cur = conn.cursor()
+        cur.execute('SELECT name FROM habits WHERE periodicity = ?', ('daily',))
+        dailies = set(cur.fetchall())
+        cur = conn.cursor()
+        cur.execute('SELECT name FROM habits WHERE periodicity = ?', ('weekly',))
+        weeklies = set(cur.fetchall())
+        
+        cur.execute('SELECT name, periodicity FROM habits')
+        all_habits = [i[0] for i in set(cur.fetchall())]
+        conn.close()
+        return render_template('analysis.html', variable_most_habit=most_habit, habits = show_habits, longest_streak_habit = longest_habit_s[0], longest_streak_streak = streak_count, daily_habits = dailies, weekly_habits = weeklies, all_habits = all_habits)  
+    except:
+        return render_template('index.html')
     
-    cur.execute('SELECT name, periodicity FROM habits')
-    all_habits = [i[0] for i in set(cur.fetchall())]
-    conn.close()
-    return render_template('analysis.html', variable_most_habit=most_habit, habits = show_habits, longest_streak_habit = longest_habit_s[0], longest_streak_streak = streak_count, daily_habits = dailies, weekly_habits = weeklies, all_habits = all_habits)  
-
 @app.route('/submit-dropdown-analysis', methods = ('POST', 'GET'))
 def analyze_selected():
     habit = request.form['dropdown']
