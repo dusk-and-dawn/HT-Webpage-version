@@ -7,6 +7,18 @@
 This habit tracking app was created for an object-oriented and functional programming course. 
 It can record habits in general as well as concrete instances of them and then process the habit data to generate minor insights. 
 
+## Functionality
+
+Users can create daily or weekly habits. 
+These habits can be incremented either as having been completed today, or on any date in the past or future. 
+A streak is automatically calculated for the user whenever they analyze a habit. 
+Weekly habits have their streak counted as continued if there is any habit occurrence recorded within 7 days following the last recorded occurence. 
+Individual habits can be further analyzed for even more insight. 
+Habits can be deleted, either single occurences or the entire habit. 
+The analytics module is only available (can only be opened) once at least one single habit is recorded. 
+The entire application can be tested automatically.
+For the automated testing, data is supplied in the test_app.py file. 
+
 ## Before first use
 
 __Python__
